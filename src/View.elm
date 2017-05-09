@@ -4,48 +4,36 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 
-import Dict exposing (Dict, get)
-
-import Dom.Scroll exposing (..)
-
 import Types exposing (..)
-import Adventure exposing (..)
-import Debug exposing (crash)
+
 
 view : Model -> Html Msg
 view model = 
   div [mainDivStyle] 
-    [ div [storyDivStyle, id "story"]
+    [ div [] [text("Adventure")]
+    , div [storyDivStyle, id "story"]
       [ div [] <| getLogHtml model
-      , div [] <| getLocStr model.location
+      , div [] <| getDisplayHtml model
+      , div [] <| getControlsHtml model
       ]]
 
 getLogHtml : Model -> List (Html Msg)
 getLogHtml model = 
-  List.map getElementHtml <| List.filter showInLog  model.log
+  List.map getElementHtml <| List.reverse model.log
 
-showInLog : Element -> Bool
-showInLog element =
-  case element of
-    Text _   -> True
-    Set _ -> False
-    Link _ _ -> False
+getDisplayHtml : Model -> List (Html Msg)
+getDisplayHtml model =
+  List.map getElementHtml <| List.reverse model.view
 
-getLocStr : String -> List (Html Msg)
-getLocStr str =
-  case Dict.get str nodes of
-    Just node -> getNodeHtml node
-    Nothing   -> [text "Not today"]
+getControlsHtml : Model -> List (Html Msg)
+getControlsHtml model =
+  List.map getElementHtml <| List.reverse model.controls
 
-getNodeHtml : Node -> List (Html Msg)
-getNodeHtml node = List.map (getElementHtml) node.elements
-
-getElementHtml : Element -> Html Msg
+getElementHtml : ViewElement -> Html Msg
 getElementHtml element =
   case element of
-    Text txt -> div [textStyle] [text(txt)]
-    Set  flag -> crash ("undefined")
-    Link lnk txt -> div [] [a [ linkStyle, onClick <| Go lnk] [text(txt)]]
+    VText txt -> div [textStyle] [text(txt)]
+    VLink act txt -> div [] [a [ linkStyle, onClick <| Do act] [text(txt)]]
 
 mainDivStyle : Attribute Msg
 mainDivStyle = style
